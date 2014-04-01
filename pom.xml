@@ -1,73 +1,78 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 
-    <modelVersion>4.0.0</modelVersion>
+	<modelVersion>4.0.0</modelVersion>
 
-    <groupId>com.fullcontact</groupId>
-    <artifactId>fullcontact4j</artifactId>
-    <name>FullContact Java Bindings</name>
-    <version>0.11.8</version>
-    <dependencies>
-        <dependency>
-            <groupId>com.google.code.gson</groupId>
-            <artifactId>gson</artifactId>
-            <version>2.2.4</version>
-        </dependency>
+	<groupId>com.fullcontact</groupId>
+	<artifactId>fullcontact4j</artifactId>
+	<name>FullContact Java Bindings</name>
+	<version>0.11.8</version>
+	<dependencies>
+		<dependency>
+			<groupId>com.google.code.gson</groupId>
+			<artifactId>gson</artifactId>
+			<version>2.2.4</version>
+		</dependency>
 
-        <dependency>
-            <groupId>junit</groupId>
-            <artifactId>junit</artifactId>
-            <version>4.11</version>
-            <scope>test</scope>
-        </dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+			<scope>test</scope>
+		</dependency>
 
-        <dependency>
-            <groupId>commons-httpclient</groupId>
-            <artifactId>commons-httpclient</artifactId>
-            <version>3.1</version>
-        </dependency>
+		<!-- <dependency> <groupId>commons-httpclient</groupId> <artifactId>commons-httpclient</artifactId> 
+			<version>3.1</version> </dependency> -->
 
-        <dependency>
-            <groupId>commons-codec</groupId>
-            <artifactId>commons-codec</artifactId>
-            <version>1.2</version>
-        </dependency>
+		<!-- <dependency>
+			<groupId>org.apache.httpcomponents</groupId>
+			<artifactId>httpclient</artifactId>
+			<version>4.3.3</version>
+		</dependency> -->
 
-    </dependencies>
+		<dependency>
+			<groupId>commons-codec</groupId>
+			<artifactId>commons-codec</artifactId>
+			<version>1.2</version>
+		</dependency>
 
-    <distributionManagement>
-        <repository>
-            <id>bintray-fullcontact-fullcontact-oss-fullcontact4j</id>
-            <name>fullcontact-fullcontact-oss-fullcontact4j</name>
-            <url>https://api.bintray.com/maven/fullcontact/fullcontact-oss/fullcontact4j</url>
-        </repository>
-    </distributionManagement>
+	</dependencies>
 
-    <build>
-        <plugins>
+	<distributionManagement>
+		<repository>
+			<id>bintray-fullcontact-fullcontact-oss-fullcontact4j</id>
+			<name>fullcontact-fullcontact-oss-fullcontact4j</name>
+			<url>https://api.bintray.com/maven/fullcontact/fullcontact-oss/fullcontact4j</url>
+		</repository>
+	</distributionManagement>
+
+	<build>
+		<plugins>
 			<plugin>
-			  <groupId>org.codehaus.gmaven</groupId>
-			  <artifactId>groovy-maven-plugin</artifactId>
-			    <executions>
-			      <execution>
-			        <phase>deploy</phase>
-			        <goals>
-			          <goal>execute</goal>
-			        </goals>
-			        <configuration>
-			          <source>
-						def authString = "fullcontact:${bintray-api-key}".getBytes().encodeBase64().toString()
-			            def conn = 'https://api.bintray.com/content/fullcontact/fullcontact-oss/fullcontact4j/${project.version}/publish'.toURL().openConnection()
-						conn.requestMethod = "POST"
-						conn.setRequestProperty("Authorization", "Basic ${authString}")
-						println "Published artifacts: " + conn.responseCode
-			          </source>
-			        </configuration>
-			      </execution>
-			  </executions>
+				<groupId>org.codehaus.gmaven</groupId>
+				<artifactId>groovy-maven-plugin</artifactId>
+				<executions>
+					<execution>
+						<phase>deploy</phase>
+						<goals>
+							<goal>execute</goal>
+						</goals>
+						<configuration>
+							<source>
+								def authString =
+								"fullcontact:${bintray-api-key}".getBytes().encodeBase64().toString()
+								def conn =
+								'https://api.bintray.com/content/fullcontact/fullcontact-oss/fullcontact4j/${project.version}/publish'.toURL().openConnection()
+								conn.requestMethod = "POST"
+								conn.setRequestProperty("Authorization", "Basic ${authString}")
+								println "Published artifacts: " + conn.responseCode
+							</source>
+						</configuration>
+					</execution>
+				</executions>
 			</plugin>
-        </plugins>
-    </build>
+		</plugins>
+	</build>
 
 </project>
