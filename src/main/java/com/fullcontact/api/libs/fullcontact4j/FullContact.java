@@ -1,5 +1,7 @@
 package com.fullcontact.api.libs.fullcontact4j;
 
+import org.apache.http.client.HttpClient;
+
 import com.fullcontact.api.libs.fullcontact4j.handlers.*;
 import com.fullcontact.api.libs.fullcontact4j.http.FullContactHttpRequest;
 
@@ -24,6 +26,19 @@ public class FullContact {
         }
 
         this.apiKey = apiKey;
+    }
+    
+    public FullContact(String apiKey, HttpClient httpClient) {
+        if (apiKey == null) {
+            throw new IllegalArgumentException("apiKey cannot be null.");
+        }
+
+        if (apiKey.trim().length() == 0) {
+            throw new IllegalArgumentException("apiKey cannot be empty.");
+        }
+
+        this.apiKey = apiKey;
+        FullContactHttpRequest.setHttpClient(httpClient);
     }
 
     /***

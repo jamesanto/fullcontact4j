@@ -1,5 +1,36 @@
 package com.fullcontact.api.libs.fullcontact4j.http;
 
+import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.UnsupportedEncodingException;
+import java.net.HttpURLConnection;
+import java.net.ProtocolException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.net.URLEncoder;
+import java.text.MessageFormat;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.TimeUnit;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
+
+import org.apache.commons.codec.binary.Base64;
+import org.apache.http.Header;
+import org.apache.http.HttpHeaders;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.HttpClient;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.message.BasicHeader;
+
 import com.fullcontact.api.libs.fullcontact4j.FullContactException;
 import com.fullcontact.api.libs.fullcontact4j.Utils;
 import com.fullcontact.api.libs.fullcontact4j.builders.CardReaderUploadRequestBuilder;
@@ -9,18 +40,11 @@ import com.fullcontact.api.libs.fullcontact4j.enums.CardReaderSandboxStatus;
 import com.fullcontact.api.libs.fullcontact4j.enums.ResponseFormat;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
-import org.apache.commons.codec.binary.Base64;
 
-import java.io.*;
-import java.net.*;
-import java.text.MessageFormat;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
-
+@SuppressWarnings("deprecation")
 public class FullContactHttpRequest {
+
+	private static HttpClient httpClient = null;
 
 	/**
 	 * customRequestProperties
@@ -100,33 +124,27 @@ public class FullContactHttpRequest {
 
 	public static String sendRequest(String apiUrl) throws FullContactException {
 		StringBuffer buffer = new StringBuffer();
-		HttpURLConnection connection = null;
-		BufferedReader in = null;
+		HttpGet get = null;
 		try {
-			URL url = new URL(apiUrl);
-			connection = (HttpURLConnection) url.openConnection();
-			connection.setRequestProperty(STR_USER_AGENT, FC_USER_AGENT);
-			in = new BufferedReader(new InputStreamReader(connection.getInputStream(), Constants.UTF_8_CHARSET));
+			get = new HttpGet(apiUrl);
+			HttpResponse response = null;
+			response = getHttpClient().execute(get);
+			BufferedReader in = new BufferedReader(new InputStreamReader(response.getEntity().getContent()));
 			String str;
 			while ((str = in.readLine()) != null) {
 				buffer.append(str);
 			}
 			in.close();
-		} catch (MalformedURLException e) {
-			throw new FullContactException(e.getMessage());
-		} catch (IOException e) {
-			throw new FullContactException(e.getMessage());
+		} catch (Throwable ex) {
+			throw new FullContactException("Fullcontact request failure", ex);
 		} finally {
-			try {
-				in.close();
-				connection.disconnect();
-			} catch (Throwable ex) {
-				throw new FullContactException(ex.getMessage(), ex);
-			}
+			get.releaseConnection();
+			getHttpClient().getConnectionManager().closeExpiredConnections();
+			getHttpClient().getConnectionManager().closeIdleConnections(5, TimeUnit.MILLISECONDS);
 		}
 		return buffer.toString();
 	}
-
+	
 	public static String sendCardReaderViewRequest(String paramString) throws FullContactException {
 		return sendRequest((Constants.API_URL_CARDREADER_VIEW_REQUESTS + paramString));
 	}
@@ -377,4 +395,28 @@ public class FullContactHttpRequest {
 		return qs;
 	}
 
+	public synchronized static void setHttpClient(HttpClient httpClient) {
+		if (httpClient == null) {
+			throw new IllegalArgumentException("HttpClient cannot be null");
+		}
+		FullContactHttpRequest.httpClient = httpClient;
+	}
+
+//	public static void setHttpClientConnectionManager(HttpClientConnectionManager httpClientConnectionManager) {
+//		if (httpClientConnectionManager == null) {
+//			throw new IllegalArgumentException("HttpClientConnectionManager cannot be null");
+//		}
+//
+//		FullContactHttpRequest.connectionManager = httpClientConnectionManager;
+//	}
+
+	public static HttpClient getHttpClient() {
+		if (httpClient == null) {
+			Header header = new BasicHeader(HttpHeaders.CONNECTION, "Close");
+			List<Header> defaultHeaders = new ArrayList<Header>();
+			defaultHeaders.add(header);
+			httpClient = HttpClientBuilder.create().setDefaultHeaders(defaultHeaders).setConnectionManager(new PoolingHttpClientConnectionManager()).build();
+		}
+		return httpClient;
+	}
 }
